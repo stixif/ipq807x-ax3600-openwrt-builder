@@ -58,3 +58,21 @@ jobs:
           delete_run_by_conclusion_pattern: success
           retain_days: 15
           keep_minimum_runs: 6
+          
+          
+      - name: Delete workflow runs
+        uses: GitRML/delete-workflow-runs@main
+        with:
+          token: ${{ secrets.AUTH_PAT }}
+          repository: ${{ github.repository }}   #${{ github.repository }}
+          retain_days: 30
+          keep_minimum_runs: 12
+      
+      - name: Delete old Releases
+        uses: dev-drprasad/delete-older-releases@v0.2.1
+        with:
+          repo: ${{ github.repository }} # defaults to current repo
+          keep_latest: 12
+          #delete_tag_pattern: beta # defaults to ""
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
