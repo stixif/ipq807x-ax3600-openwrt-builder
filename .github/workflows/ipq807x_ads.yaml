@@ -1,0 +1,239 @@
+name: ipq807x_dl-wrx36 Build remote repo only if new commits were pushed
+on:
+  workflow_dispatch:
+  #push:
+  schedule:
+    #- cron: '0 10 * * 1'
+    - cron: '0 7 * * *'
+jobs:
+  check:
+    name: Check remote repo for new commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use GitHub API to poll commits
+        run: |
+          curl -sL "https://api.github.com/repos/$REMOTE_REPOSITORY/commits?sha=$REMOTE_BRANCH&per_page=1" | jq -r '[.[]][0]' > commit.json
+        env:
+          REMOTE_REPOSITORY: robimarko/openwrt
+          REMOTE_BRANCH: ipq807x-5.15-pr
+      - name: Calculate hours since last commit
+        id: calc
+        run: |
+          date="$(jq -r '.commit.committer.date' commit.json)"
+          timestamp=$(date --utc -d "$date" +%s)
+          hours=$(( ( $(date --utc +%s) - $timestamp ) / 3600 ))
+          echo "Last commit date: $date"
+          echo "Hours since last commit: $hours"
+          echo "::set-output name=commit_age::$hours"
+    outputs:
+      commit_age: ${{ steps.calc.outputs.commit_age }}
+  build:
+    name: Build the remote repository
+    needs: check
+    runs-on: ubuntu-latest
+    if: ${{ needs.check.outputs.commit_age <= 24 || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Show inputs received from previous job
+        env:
+          COMMIT_AGE: ${{ needs.check.outputs.commit_age }}
+        run: |
+          echo "Build triggered with commits last pushed $COMMIT_AGE hours ago"
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: robimarko/openwrt
+          ref: ipq807x-5.15-pr
+      - name: Update and install feeds
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+      - name: Generate config for IPQ807x Generic
+        run: |
+          echo 'CONFIG_TARGET_ipq807x=y' > .config
+          echo 'CONFIG_TARGET_ipq807x_generic=y\n' >> .config
+          #echo 'CONFIG_TARGET_MULTI_PROFILE=y\n' >> .config
+          #echo 'CONFIG_TARGET_ALL_PROFILES=y\n' >> .config
+          echo 'CONFIG_TARGET_ipq807x_generic_DEVICE_xiaomi_ax3600=y' >> .config
+          echo 'CONFIG_TARGET_PROFILE="DEVICE_xiaomi_ax3600"' >> .config
+          #echo 'CONFIG_TARGET_DEVICE_ipq807x_generic_DEVICE_edgecore_eap102=y' >> .config
+          #echo 'CONFIG_TARGET_DEVICE_PACKAGES_ipq807x_generic_DEVICE_edgecore_eap102=""' >> .config
+          #echo 'CONFIG_TARGET_DEVICE_ipq807x_generic_DEVICE_edimax_cax1800=y' >> .config
+          #echo 'CONFIG_TARGET_DEVICE_PACKAGES_ipq807x_generic_DEVICE_edimax_cax1800=""' >> .config
+          #echo 'CONFIG_TARGET_DEVICE_ipq807x_generic_DEVICE_qnap_301w=y' >> .config
+          #echo 'CONFIG_TARGET_DEVICE_PACKAGES_ipq807x_generic_DEVICE_qnap_301w=""' >> .config
+          #echo 'CONFIG_TARGET_DEVICE_ipq807x_generic_DEVICE_redmi_ax6=y' >> .config
+          #echo 'CONFIG_TARGET_DEVICE_PACKAGES_ipq807x_generic_DEVICE_redmi_ax6=""' >> .config
+          #echo 'CONFIG_TARGET_DEVICE_ipq807x_generic_DEVICE_xiaomi_ax9000=y' >> .config
+          #echo 'CONFIG_TARGET_DEVICE_PACKAGES_ipq807x_generic_DEVICE_xiaomi_ax9000=""' >> .config
+          echo 'CONFIG_TARGET_PER_DEVICE_ROOTFS=y\n' >> .config
+          echo 'CONFIG_TARGET_ROOTFS_INITRAMFS=y\n' >> .config
+          echo 'CONFIG_TARGET_INITRAMFS_COMPRESSION_ZSTD=y\n' >> .config
+          #echo 'CONFIG_TARGET_ALL_PROFILES=y\n' >> .config
+
+          # Sonstiges
+          #echo 'CONFIG_HAS_SUBTARGETS=y' >> .config
+          #echo 'CONFIG_TARGET_BOARD="ipq807x"' >> .config
+          #echo 'CONFIG_TARGET_SUBTARGET="generic"' >> .config
+          #echo 'CONFIG_TARGET_ARCH_PACKAGES="aarch64_cortex-a53"' >> .config
+          #echo 'CONFIG_DEFAULT_TARGET_OPTIMIZATION="-Os -pipe -mcpu=cortex-a53"' >> .config
+          #echo "CONFIG_PACKAGE_nss-firmware-ipq8074=y" >> .config   
+          #echo 'CONFIG_TARGET_ROOTFS_SQUASHFS=y' >> .config
+          #echo 'CONFIG_TARGET_SQUASHFS_BLOCK_SIZE=256' >> .config
+          #echo 'CONFIG_TARGET_UBIFS_FREE_SPACE_FIXUP=y' >> .config
+          #echo 'CONFIG_TARGET_OPTIMIZATION="-Os -pipe -mcpu=cortex-a53"' >> .config
+          #echo "CONFIG_PACKAGE_kmod-qca-nss-ecm=y\n" >> .config
+          #echo "CONFIG_PACKAGE_kmod-qca-nss-drv=y\n" >> .config
+          #echo "CONFIG_PACKAGE_kmod-qca-nss-drv-pppoe=y\n" >> .config
+          #echo "CONFIG_PACKAGE_kmod-qca-nss-drv-bridge-mgr=y\n" >> .config
+          #echo "CONFIG_PACKAGE_kmod-qca-nss-drv-vlan-mgr=y\n" >> .config
+          #echo "CONFIG_PACKAGE_kmod-bridge=y" >> .config
+
+          #  Standard
+          #echo "CONFIG_PACKAGE_libiwinfo-lua=y" >> .config
+          #echo "CONFIG_PACKAGE_liblua=y" >> .config
+          #echo "CONFIG_PACKAGE_liblucihttp=y" >> .config
+          #echo "CONFIG_PACKAGE_liblucihttp-lua=y" >> .config
+          #echo "CONFIG_PACKAGE_libubus-lua=y" >> .config
+          #echo "CONFIG_PACKAGE_lua=y" >> .config
+          #echo "CONFIG_PACKAGE_rpcd=y" >> .config
+          #echo "CONFIG_PACKAGE_rpcd-mod-file=y" >> .config
+          #echo "CONFIG_PACKAGE_rpcd-mod-iwinfo=y" >> .config
+          #echo "CONFIG_PACKAGE_rpcd-mod-luci=y" >> .config
+          #echo "CONFIG_PACKAGE_rpcd-mod-rrdns=y" >> .config
+          #echo "CONFIG_PACKAGE_uhttpd=y" >> .config
+          #echo "CONFIG_PACKAGE_uhttpd-mod-ubus=y" >> .config
+          
+          # kmod
+          # standard
+          echo "CONFIG_PACKAGE_kmod-qca-nss-dp=y\n" >> .config
+          echo "CONFIG_PACKAGE_qca-ssdk-shell=y\n" >> .config
+          #echo "CONFIG_PACKAGE_cgi-io=y" >> .config
+          #echo "CONFIG_PACKAGE_kmod-qca-ssdk-nohnat=y" >> .config
+
+
+          # wpad full
+          #echo "CONFIG_PACKAGE_wpad-mini=n" >> .config
+          echo "CONFIG_PACKAGE_wpad-basic-wolfssl=m\n" >> .config
+          echo "CONFIG_PACKAGE_wpad-wolfssl=y\n" >> .config
+
+          # services and tools
+          echo "CONFIG_PACKAGE_curl=y" >> .config
+          echo "CONFIG_PACKAGE_wget=y" >> .config
+          echo "CONFIG_PACKAGE_arp-scan=y" >> .config
+          echo "CONFIG_PACKAGE_bind-host=y" >> .config
+          #echo "CONFIG_PACKAGE_ca-certificates=y" >> .config
+          #echo "CONFIG_PACKAGE_ca-bundle=y" >> .config
+          #echo "CONFIG_PACKAGE_ddns-scripts=y" >> .config
+          #echo "CONFIG_PACKAGE_ddns-scripts-cloudflare=y" >> .config
+          #echo "CONFIG_PACKAGE_ddns-scripts-services=y" >> .config
+          #echo "CONFIG_PACKAGE_findutils-xargs=y" >> .config
+          #echo "CONFIG_PACKAGE_fping=y" >> .config
+          #echo "CONFIG_PACKAGE_gawk=y" >> .config
+          #echo "CONFIG_PACKAGE_ip-full=y" >> .config
+          #echo "CONFIG_PACKAGE_iputils-arping=y" >> .config
+          echo "CONFIG_PACKAGE_irqbalance=y" >> .config
+          #echo "CONFIG_PACKAGE_iwinfo=y" >> .config
+          #echo "CONFIG_PACKAGE_less-wide=y" >> .config
+          #echo "CONFIG_PACKAGE_lldpd=y" >> .config
+          #echo "CONFIG_PACKAGE_miniupnpd=y/n" >> .config
+          #echo "CONFIG_PACKAGE_procd-seccomp=y" >> .config
+          #echo "CONFIG_PACKAGE_qos-scripts=y" >> .config
+          #echo "CONFIG_PACKAGE_wireguard=y" >> .config
+          #echo "CONFIG_PACKAGE_iftop=y" >> .config
+          #echo "CONFIG_PACKAGE_vnstat=y\n" >> .config
+          #echo "CONFIG_PACKAGE_darkstat=y\n" >> .config
+
+          # luci
+          # Standard
+          echo "CONFIG_PACKAGE_luci=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-firewall=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-opkg=y" >> .config		  
+          #echo "CONFIG_PACKAGE_luci-base=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-lib-base=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-lib-ip=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-lib-jsonc=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-lib-nixio=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-mod-admin-full=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-mod-network=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-mod-status=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-mod-system=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-proto-ipv6=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-proto-ppp=y" >> .config		  
+          #echo "CONFIG_PACKAGE_luci-theme-bootstrap=y" >> .config  
+          # Sonstiges
+          echo "CONFIG_PACKAGE_luci-compat=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-nft-qos=y/n" >> .config
+          echo "CONFIG_PACKAGE_luci-ssl=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-ddns=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-qos=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-upnp=y/n" >> .config
+          #echo "CONFIG_PACKAGE_luci-mod-dashboard=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-wireguard=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-ddns=y" >> .config
+          #echo "CONFIG_PACKAGE_less=n" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-vnstat2=y/n" >> .config
+          echo "CONFIG_PACKAGE_luci-app-statistics=y" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-nlbwmon=y/n" >> .config
+          # Spam
+          echo "CONFIG_PACKAGE_adblock=y\n" >> .config
+          echo "CONFIG_PACKAGE_luci-app-adblock=y\n" >> .config
+          echo "CONFIG_PACKAGE_tcpdump-mini=y\n" >> .config
+          # wlan test
+          #echo "CONFIG_PACKAGE_dawn=y\n" >> .config
+          #echo "CONFIG_PACKAGE_luci-app-dawn=y\n" >> .config
+          
+          
+          make defconfig
+      - name: Enable WiFi on default config
+        run: |
+          mkdir -p files/etc/uci-defaults
+          cat > files/etc/uci-defaults/xxx_config << EOF
+          uci set wireless.radio1.disabled=0
+          uci commit
+          EOF
+      - name: Download package sources
+        run: make download V=s
+      - name: Build tools
+        run: |
+          make tools/install -j$(nproc) V=s || \
+          make tools/install V=s
+      - name: Build toolchain
+        run: |
+          make toolchain/install -j$(nproc) V=s || \
+          make toolchain/install V=s
+      - name: Build target images
+        run: |
+          make -j$(nproc) V=s || \
+          make V=s
+      - name: TAR output
+        run: tar -cvf ipq807xx-images_ads.tar bin/targets/ipq807x/generic
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ipq807x-images_ads
+          path: ipq807xx-images_ads.tar
+  release:
+    name: Upload artifacts as release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download the image artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ipq807x-images_ads
+      - name: Extract the image artifacts
+        run: tar xf ipq807xx-images_ads.tar
+      - name: Extract version information from version.buildinfo
+        run: >-
+          echo "BUILDINFO=$(cat bin/targets/ipq807x/generic/version.buildinfo)"
+          >> $GITHUB_ENV
+      - name: Create a release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: '${{ secrets.GITHUB_TOKEN }}'
+          prerelease: true
+          title: 'Updated prebuilt images (${{ env.BUILDINFO }})'
+          automatic_release_tag: ipq807x-latest_ads@v4.3
+          files: bin/targets/ipq807x/generic/*
+     

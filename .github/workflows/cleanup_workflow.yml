@@ -1,0 +1,60 @@
+name: Delete old workflow runs
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+env:
+  FORCE_COLOR: 1
+jobs:
+  retain-workflows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+    steps:
+      - name: Delete the Delete workflows
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          delete_workflow_pattern: Delete old workflow runs
+          retain_days: 0
+          keep_minimum_runs: 0
+      
+      - name: Delete Skipped workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          delete_run_by_conclusion_pattern: skipped
+          retain_days: 0
+          keep_minimum_runs: 0  
+      
+      - name: Delete cancelled workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          delete_run_by_conclusion_pattern: cancelled
+          retain_days: 0
+          keep_minimum_runs: 0
+      
+      - name: Delete failure workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          delete_run_by_conclusion_pattern: failure
+          retain_days: 0
+          keep_minimum_runs: 0
+
+      - name: Delete schedule workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          delete_run_by_conclusion_pattern: success
+          retain_days: 15
+          keep_minimum_runs: 6
