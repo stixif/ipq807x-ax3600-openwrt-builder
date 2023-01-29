@@ -66,13 +66,13 @@ jobs:
           token: ${{ secrets.AUTH_PAT }}
           repository: ${{ github.repository }}   #${{ github.repository }}
           retain_days: 30
-          keep_minimum_runs: 12
+          keep_minimum_runs: 8
       
       - name: Delete old Releases
         uses: dev-drprasad/delete-older-releases@v0.2.1
         with:
           repo: ${{ github.repository }} # defaults to current repo
-          keep_latest: 12
+          keep_latest: 8
           #delete_tag_pattern: beta # defaults to ""
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
