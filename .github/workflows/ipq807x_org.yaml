@@ -118,8 +118,8 @@ jobs:
                 #echo "CONFIG_PACKAGE_luci-app-adblock=y\n" >> .config
                 
                 # wlan test
-                echo "CONFIG_PACKAGE_dawn=y\n" >> .config
-                echo "CONFIG_PACKAGE_luci-app-dawn=y\n" >> .config
+                #echo "CONFIG_PACKAGE_dawn=y\n" >> .config
+                #echo "CONFIG_PACKAGE_luci-app-dawn=y\n" >> .config
                 
 
                 make defconfig
