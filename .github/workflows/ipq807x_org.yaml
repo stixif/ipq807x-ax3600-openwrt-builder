@@ -5,6 +5,13 @@ on:
   schedule:
     #- cron: '0 10 * * 1'
      - cron: '0 5 * * *'
+     
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+  pull-requests: write
+  
 jobs:
   check1:
     name: Check remote repo for new commits
@@ -182,3 +189,4 @@ jobs:
                 automatic_release_tag: "ipq807x_ax3600_org-${{ env.NOW }}@(${{ env.BUILDINFO }})"
                 auto_generate_release_notes: true
                 files: bin/targets/ipq807x/generic/*
+                
