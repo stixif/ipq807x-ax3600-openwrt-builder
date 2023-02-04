@@ -91,9 +91,15 @@ jobs:
                 echo "CONFIG_TARGET_ROOTFS_INITRAMFS=y\n" >> .config
                 echo "CONFIG_TARGET_INITRAMFS_COMPRESSION_ZSTD=y\n" >> .config
                 
-                echo "CONFIG_PACKAGE_wpad-basic-wolfssl=m\n" >> .config
-                echo "CONFIG_PACKAGE_wpad-wolfssl=y\n" >> .config
-                echo "CONFIG_PACKAGE_libwolfssl=n\n" >> .config
+                #WOLFSSL
+                #echo "CONFIG_PACKAGE_wpad-basic-wolfssl=m\n" >> .config
+                #echo "CONFIG_PACKAGE_wpad-wolfssl=y\n" >> .config
+                #echo "CONFIG_PACKAGE_libwolfssl=n\n" >> .config
+                
+                #MBEDTLS
+                echo "CONFIG_PACKAGE_wpad-basic-mbedtls=m\n" >> .config
+                echo "CONFIG_PACKAGE_wpad-mbedtls=y\n" >> .config
+                
                 
                 # services and tools
                 echo "CONFIG_PACKAGE_curl=y" >> .config
