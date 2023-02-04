@@ -185,4 +185,4 @@ jobs:
                 automatic_release_tag: "ipq807x_ax3600_test-${{ env.NOW }}"
                 auto_generate_release_notes: true
                 files: bin/targets/ipq807x/generic/*
-				
+                
