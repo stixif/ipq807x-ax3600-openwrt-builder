@@ -2,9 +2,9 @@ name: "Build IPQ807x_ax3600_test"
 on:
   workflow_dispatch:
   #push:
-  schedule:
+  #schedule:
     #- cron: '0 10 * * 1'
-     - cron: '0 5 * * 1'
+    #- cron: '0 5 * * 1'
   
 jobs:
   check1:
