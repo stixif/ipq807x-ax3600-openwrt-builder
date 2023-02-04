@@ -177,11 +177,11 @@ jobs:
               run: echo "NOW=$(date +%F-%H%M)" >> $GITHUB_ENV
 
             - name: Create a release
-              #uses: "lauravuo/action-automatic-releases@test-changes"
-              uses: "marvinpinto/action-automatic-releases@latest"
+              uses: "lauravuo/action-automatic-releases@test-changes"
+              #uses: "marvinpinto/action-automatic-releases@latest"
               with:
                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
-                draft: true
+                #draft: true
                 prerelease: true
                 title: "ipq807x_ax3600_test-${{ env.NOW }}"
                 automatic_release_tag: "ipq807x_ax3600_test-${{ env.NOW }}"
